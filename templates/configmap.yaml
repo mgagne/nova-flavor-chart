@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-flavor-scripts
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/component: nova-flavor
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  nova-flavor-sync.sh: |
+    {{- .Files.Get "files/nova-flavor-sync.sh" | nindent 4 }}
+  nova-flavor-sync.yaml: |
+    {{- .Files.Get "files/nova-flavor-sync.yaml" | nindent 4 }}

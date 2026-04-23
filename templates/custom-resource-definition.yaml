@@ -1,0 +1,139 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: flavors.osh.openstack.org
+spec:
+  group: osh.openstack.org
+  names:
+    categories:
+    - openstack
+    kind: Flavor
+    listKind: FlavorList
+    plural: flavors
+    singular: flavor
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Flavor is the Schema for an ORC resource.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec specifies the desired state of the resource.
+            properties:
+              resource:
+                description: |-
+                  resource specifies the desired state of the resource.
+
+                  resource may not be specified if the management policy is `unmanaged`.
+
+                  resource must be specified if the management policy is `managed`.
+                properties:
+                  description:
+                    description: description contains a free form description of the
+                      flavor.
+                    maxLength: 65535
+                    minLength: 1
+                    type: string
+                  disk:
+                    description: |-
+                      disk is the size of the root disk that will be created in GiB. If 0
+                      the root disk will be set to exactly the size of the image used to
+                      deploy the instance. However, in this case the scheduler cannot
+                      select the compute host based on the virtual image size. Therefore,
+                      0 should only be used for volume booted instances or for testing
+                      purposes. Volume-backed instances can be enforced for flavors with
+                      zero root disk via the
+                      os_compute_api:servers:create:zero_disk_flavor policy rule.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                  ephemeral:
+                    description: |-
+                      ephemeral is the size of the ephemeral disk that will be created, in GiB.
+                      Ephemeral disks may be written over on server state changes. So should only
+                      be used as a scratch space for applications that are aware of its
+                      limitations. Defaults to 0.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                  isPublic:
+                    description: isPublic flags a flavor as being available to all
+                      projects or not.
+                    type: boolean
+                  name:
+                    description: |-
+                      name will be the name of the created resource. If not specified, the
+                      name of the ORC object will be used.
+                    maxLength: 255
+                    minLength: 1
+                    pattern: ^[^,]+$
+                    type: string
+                  ram:
+                    description: ram is the memory of the flavor, measured in MB.
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  swap:
+                    description: |-
+                      swap is the size of a dedicated swap disk that will be allocated, in
+                      MiB. If 0 (the default), no dedicated swap disk will be created.
+                    format: int32
+                    minimum: 0
+                    type: integer
+                  vcpus:
+                    description: vcpus is the number of vcpus for the flavor.
+                    format: int32
+                    minimum: 1
+                    type: integer
+                  extraSpecs:
+                    description: extraSpecs is a map of key-value pairs that define
+                      extra specifications for the flavor.
+                    type: object
+                    maxProperties: 64
+                    additionalProperties:
+                      type: string
+                      maxLength: 255
+                    x-kubernetes-validations:
+                    - rule: self.all(key, size(key) <= 255)
+                      message: extraSpecs key must be at most 255 characters
+                required:
+                - disk
+                - ram
+                - vcpus
+                type: object
+                x-kubernetes-validations:
+                - message: All fields except extraSpecs are immutable
+                  rule: |-
+                    self.ram == oldSelf.ram &&
+                    self.vcpus == oldSelf.vcpus &&
+                    self.disk == oldSelf.disk &&
+                    (!has(self.name) && !has(oldSelf.name) || has(self.name) && has(oldSelf.name) && self.name == oldSelf.name) &&
+                    (!has(self.description) && !has(oldSelf.description) || has(self.description) && has(oldSelf.description) && self.description == oldSelf.description) &&
+                    (!has(self.ephemeral) && !has(oldSelf.ephemeral) || has(self.ephemeral) && has(oldSelf.ephemeral) && self.ephemeral == oldSelf.ephemeral) &&
+                    (!has(self.isPublic) && !has(oldSelf.isPublic) || has(self.isPublic) && has(oldSelf.isPublic) && self.isPublic == oldSelf.isPublic) &&
+                    (!has(self.swap) && !has(oldSelf.swap) || has(self.swap) && has(oldSelf.swap) && self.swap == oldSelf.swap)
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true

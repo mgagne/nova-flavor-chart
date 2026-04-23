@@ -1,0 +1,27 @@
+---
+
+- name: OpenStack Nova Flavors
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Fetch flavors
+      set_fact:
+        flavors: "{{ query('kubernetes.core.k8s', api_version='osh.openstack.org/v1alpha1', kind='Flavor', namespace='openstack') }}"
+    - name: Manage flavors
+      openstack.cloud.compute_flavor:
+        cloud: openstack
+        state: present
+        id: "{{ item.metadata.name }}"
+        name: "{{ item.spec.resource.name | default(item.metadata.name) }}"
+        ram: "{{ item.spec.resource.ram }}"
+        vcpus: "{{ item.spec.resource.vcpus }}"
+        disk: "{{ item.spec.resource.disk }}"
+        ephemeral: "{{ item.spec.resource.ephemeral | default(0) }}"
+        swap: "{{ item.spec.resource.swap | default(0) }}"
+        is_public: "{{ item.spec.resource.isPublic | default(true) }}"
+        description: "{{ item.spec.resource.description | default(omit) }}"
+        extra_specs: "{{ item.spec.resource.extraSpecs | default({}) }}"
+      loop: "{{ flavors }}"
+      loop_control:
+        label: "{{ item.metadata.name }}"

@@ -1,0 +1,20 @@
+{{- range $flavorId, $flavorSpec := .Values.novaFlavors.specs -}}
+{{- if $flavorSpec.create | default true }}
+---
+apiVersion: osh.openstack.org/v1alpha1
+kind: Flavor
+metadata:
+  name: {{ $flavorId }}
+spec:
+  resource:
+    name: {{ $flavorSpec.name | default $flavorId | quote }}
+    ram: {{ $flavorSpec.ram }}
+    vcpus: {{ $flavorSpec.vcpus }}
+    disk: {{ $flavorSpec.disk | default 0 }}
+    isPublic: {{ $flavorSpec.isPublic | default true }}
+    {{- with $flavorSpec.extraSpecs }}
+    extraSpecs:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{ end -}}
+{{- end -}}

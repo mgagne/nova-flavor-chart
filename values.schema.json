@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "novaFlavors": {
+      "type": "object",
+      "description": "Nova flavor management configuration",
+      "properties": {
+        "cloudCredentials": {
+          "type": "object",
+          "description": "Cloud credentials for authenticating with OpenStack",
+          "properties": {
+            "cloudName": {
+              "type": "string",
+              "description": "Name of the cloud in clouds.yaml"
+            },
+            "secretName": {
+              "type": "string",
+              "description": "Name of the Secret containing clouds.yaml"
+            }
+          },
+          "required": ["cloudName", "secretName"],
+          "additionalProperties": false
+        },
+        "nodeSelector": {
+          "type": "object",
+          "description": "Job nodeSelector"
+        },
+        "resources": {
+          "type": "object",
+          "description": "Kubernetes resource requirements",
+          "additionalProperties": true
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Pod security context"
+        },
+        "specs": {
+          "type": "object",
+          "description": "Map of Nova flavor names to their specs",
+          "additionalProperties": {
+            "$ref": "#/$defs/flavorSpec"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "flavorSpec": {
+      "type": "object",
+      "description": "Nova flavor specification",
+      "properties": {
+        "vcpus": {
+          "type": "integer",
+          "description": "Number of virtual CPUs",
+          "minimum": 1
+        },
+        "ram": {
+          "type": "integer",
+          "description": "Amount of RAM in MB",
+          "minimum": 1
+        },
+        "extraSpecs": {
+          "type": "object",
+          "description": "Extra specs for the flavor",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["vcpus", "ram"],
+      "additionalProperties": false
+    }
+  }
+}

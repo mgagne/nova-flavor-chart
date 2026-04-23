@@ -1,0 +1,47 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nova-flavor-sync
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/component: nova-flavor
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccount: nova-flavor
+      restartPolicy: Never
+      nodeSelector: {{ toYaml .Values.novaFlavors.nodeSelector | nindent 8 }}
+      containers:
+        - name: ansible
+          # https://github.com/rackerlabs/understack/blob/v0.2.33/containers/ansible/Dockerfile
+          image: ghcr.io/rackerlabs/understack/ansible:v0.2.33
+          imagePullPolicy: Always
+          command:
+            - bash
+            - -c
+            - /runner/playbooks/nova-flavor-sync.sh
+          resources: {{ toYaml .Values.novaFlavors.resources | nindent 12 }}
+          env:
+            - name: OS_CLOUD
+              value: "{{ .Values.novaFlavors.cloudCredentials.cloudName }}"
+          volumeMounts:
+            - name: ansible-playbooks
+              mountPath: /runner/playbooks/
+            - name: openstack-clouds
+              mountPath: /etc/openstack
+              readOnly: true
+          securityContext: {{ toYaml .Values.novaFlavors.securityContext | nindent 12 }}
+      volumes:
+        - name: ansible-playbooks
+          configMap:
+            name: nova-flavor-scripts
+            defaultMode: 0555
+        - name: openstack-clouds
+          secret:
+            secretName: "{{ .Values.novaFlavors.cloudCredentials.secretName }}"
+            items:
+              - key: clouds.yaml
+                path: clouds.yaml

@@ -1,0 +1,7 @@
+---
+apiVersion: v2
+appVersion: v1.0.0
+description: Nova Flavors Resources
+name: nova-flavor
+version: 0.1.0
+home: https://github.com/mgagne/nova-flavor-chart
